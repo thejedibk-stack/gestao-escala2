@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão de Escala</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8fafc;color:#0f172a;min-height:100vh;padding:16px}
+h1{text-align:center;font-size:1.1rem;font-weight:600;color:#185FA5;margin-bottom:12px}
+.tabs{display:flex;gap:4px;background:#e2e8f0;border-radius:12px;padding:4px;margin-bottom:1rem;max-width:600px;margin-left:auto;margin-right:auto}
+.tab{flex:1;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:#64748b;border:none;background:transparent;transition:all .15s}
+.tab.active{background:#185FA5;color:#fff}
+.section{display:none;max-width:600px;margin:0 auto}.section.active{display:block}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #e2e8f0}
+label{display:block;font-size:11px;color:#64748b;margin-bottom:3px}
+input,select{width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;color:#0f172a;font-size:14px;outline:none;background:#f8fafc}
+input:focus,select:focus{border-color:#185FA5}
+.btn{padding:9px 16px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:600}
+.btn-primary{background:#185FA5;color:#fff}.btn-primary:hover{background:#0C447C}
+.btn-ghost{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}.btn-ghost:hover{background:#e2e8f0}
+.btn-sm{padding:6px 12px;font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dist-box{background:#f8fafc;border-radius:8px;padding:10px;border:1px solid #e2e8f0}
+.dist-title{font-size:12px;font-weight:600;color:#0f172a;margin-bottom:2px}
+.dist-sub{font-size:11px;color:#94a3b8;margin-bottom:6px}
+.warn{font-size:11px;color:#dc2626;margin-top:4px;display:none}
+.check-msg{font-size:12px;margin-top:10px;text-align:center;min-height:18px}
+.opt-card{padding:10px;border-radius:8px;cursor:pointer;text-align:center;border:2px solid #185FA5;background:#fff;transition:all .15s}
+.opt-card.inactive{border:1px solid #cbd5e1;background:#f8fafc}
+.opt-title{font-size:13px;font-weight:600;color:#0f172a}
+.opt-sub{font-size:10px;color:#64748b;margin-top:3px}
+.opt-badge{font-size:10px;color:#185FA5;margin-top:2px}
+.opt-card.inactive .opt-badge{color:#94a3b8}
+/* visão */
+.nav-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.nav-btn{padding:6px 14px;border:1px solid #cbd5e1;border-radius:8px;background:#f1f5f9;color:#0f172a;cursor:pointer;font-size:15px}
+.nav-label{font-size:13px;font-weight:600;color:#185FA5}
+.avg-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem}
+.avg-box{background:#f8fafc;border-radius:8px;padding:10px;text-align:center;border:1px solid #e2e8f0}
+.avg-n{font-size:20px;font-weight:600}
+.avg-l{font-size:11px;color:#64748b;margin-top:2px}
+.week-wrap{overflow-x:auto}
+.week-grid{display:grid;grid-template-columns:repeat(7,minmax(70px,1fr));gap:4px;min-width:500px}
+.day-col{border-radius:8px;overflow:hidden;border:1px solid #e2e8f0}
+.day-head{padding:6px 4px;text-align:center;background:#f1f5f9}
+.day-head.today{background:#185FA5}
+.day-dow{font-size:10px;font-weight:600;color:#64748b}
+.day-head.today .day-dow{color:#bfdbfe}
+.day-dd{font-size:15px;font-weight:600;color:#0f172a}
+.day-head.today .day-dd{color:#fff}
+.day-head.weekend{background:#f8fafc}
+.day-head.weekend .day-dow{color:#94a3b8}
+.day-body{padding:6px 4px;background:#fff;display:flex;flex-direction:column;gap:0}
+.turno-row{text-align:center;padding:4px 0}
+.turno-lbl{font-size:9px;color:#94a3b8;margin-bottom:1px}
+.turno-val{font-size:20px;font-weight:600;line-height:1}
+.divider{height:1px;background:#f1f5f9;margin:0 4px}
+/* equipe */
+.esc-block{margin-bottom:16px}
+.esc-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.esc-title{font-size:12px;font-weight:600;color:#475569}
+.esc-count{font-size:11px;color:#94a3b8}
+.letter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:5px}
+.letter-box{background:#f8fafc;border-radius:8px;padding:8px;text-align:center;border:1px solid #e2e8f0}
+.letter-name{font-size:12px;font-weight:600;color:#0f172a}
+.letter-count{font-size:20px;font-weight:600;margin:2px 0}
+.letter-turno{font-size:10px;color:#64748b}
+/* github */
+footer{text-align:center;color:#94a3b8;font-size:11px;padding:16px 0;max-width:600px;margin:0 auto}
+</style>
+</head>
+<body>
+
+<h1>Gestão de Escala</h1>
+
+<div class="tabs">
+  <button id="tab-visao"  class="tab active" onclick="showTab('visao')">Visão Geral</button>
+  <button id="tab-equipe" class="tab"         onclick="showTab('equipe')">Equipe</button>
+  <button id="tab-config" class="tab"         onclick="showTab('config')">Configurações</button>
+</div>
+
+<!-- VISÃO GERAL -->
+<div id="sec-visao" class="section active">
+  <div class="card">
+    <div class="nav-row">
+      <button class="nav-btn" onclick="changeWeek(-1)">←</button>
+      <span class="nav-label" id="v-week-label"></span>
+      <button class="nav-btn" onclick="changeWeek(1)">→</button>
+    </div>
+    <div class="avg-grid">
+      <div class="avg-box"><div class="avg-n" id="avg-M" style="color:#d97706;">-</div><div class="avg-l">Manhã / dia</div></div>
+      <div class="avg-box"><div class="avg-n" id="avg-T" style="color:#ea580c;">-</div><div class="avg-l">Tarde / dia</div></div>
+      <div class="avg-box"><div class="avg-n" id="avg-N" style="color:#7c3aed;">-</div><div class="avg-l">Noite / dia</div></div>
+      <div class="avg-box"><div class="avg-n" id="avg-F" style="color:#16a34a;">-</div><div class="avg-l">Folga / dia</div></div>
+    </div>
+    <div class="week-wrap">
+      <div class="week-grid" id="week-grid">
+        <div style="grid-column:1/-1;text-align:center;color:#94a3b8;font-size:13px;padding:2rem 0;">Configure os funcionários na aba Configurações</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EQUIPE -->
+<div id="sec-equipe" class="section">
+  <div class="card">
+    <div id="equipe-content"><p style="color:#94a3b8;font-size:13px;text-align:center;padding:2rem 0;">Configure as escalas na aba Configurações</p></div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="sec-config" class="section">
+  <div class="card">
+    <p style="font-size:12px;font-weight:600;color:#0f172a;margin-bottom:10px;">Total de empregados</p>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input id="total-emp" type="number" min="1" placeholder="Ex: 100" oninput="updateCheck()" style="flex:1;">
+      <span id="restante-label" style="font-size:12px;color:#64748b;white-space:nowrap;"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <p style="font-size:12px;font-weight:600;color:#0f172a;margin-bottom:12px;">Distribuição por escala</p>
+
+    <div class="dist-box" style="margin-bottom:8px;">
+      <div class="dist-title">4×2×4</div>
+      <div class="grid2" style="margin:8px 0 10px;">
+        <div id="opt-5" class="opt-card" onclick="selectCfg('5')">
+          <div class="opt-title">5 letras</div>
+          <div class="opt-sub">B, E, C-G, H, T</div>
+          <div class="opt-badge">múltiplo de 5</div>
+        </div>
+        <div id="opt-10" class="opt-card inactive" onclick="selectCfg('10')">
+          <div class="opt-title">10 letras</div>
+          <div class="opt-sub">A, B, C, D, E, F, G, H, I, T</div>
+          <div class="opt-badge">múltiplo de 10</div>
+        </div>
+      </div>
+      <label id="lbl-q4">Quantidade (múltiplo de 5)</label>
+      <input id="q-4x2x4" type="number" min="0" step="5" placeholder="0" oninput="updateCheck()">
+      <div id="w-4x2x4" class="warn"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="dist-box">
+        <div class="dist-title">4×2-6×4</div>
+        <div class="dist-sub">Múltiplo de 16</div>
+        <input id="q-4x2x6x4" type="number" min="0" step="16" placeholder="0" oninput="updateCheck()">
+        <div id="w-4x2x6x4" class="warn"></div>
+      </div>
+      <div class="dist-box">
+        <div class="dist-title">4×1×3</div>
+        <div class="dist-sub">Múltiplo de 8</div>
+        <input id="q-4x1x3" type="number" min="0" step="8" placeholder="0" oninput="updateCheck()">
+        <div id="w-4x1x3" class="warn"></div>
+      </div>
+      <div class="dist-box">
+        <div class="dist-title">Semanal Manhã</div>
+        <div class="dist-sub">Qualquer valor</div>
+        <input id="q-semM" type="number" min="0" step="1" placeholder="0" oninput="updateCheck()">
+      </div>
+      <div class="dist-box">
+        <div class="dist-title">Semanal Tarde</div>
+        <div class="dist-sub">Qualquer valor</div>
+        <input id="q-semT" type="number" min="0" step="1" placeholder="0" oninput="updateCheck()">
+      </div>
+    </div>
+    <div id="dist-check" class="check-msg"></div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:1rem;max-width:600px;margin-left:auto;margin-right:auto;">
+    <button class="btn btn-primary" style="flex:1;" onclick="applyDistribution()">Aplicar distribuição</button>
+    <button class="btn btn-ghost btn-sm" onclick="clearAll()">Limpar</button>
+  </div>
+</div>
+
+<footer>Developed by B.T.Beck</footer>
+
+<script>
+const TODAY_REF=new Date(2026,4,4);
+const MESES_PT=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const DIAS_PT=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+
+const CFGS={'5':{letras:['B','E','C-G','H','T'],mult:5},'10':{letras:['A','B','C','D','E','F','G','H','I','T'],mult:10}};
+let selected4='5';
+
+// 4x2x4 — ciclo 10
+const C10_M =['M','M','M','M','N','N','F','F','F','F'];
+const C10_T =['T','T','T','T','N','N','F','F','F','F'];
+const C10_CG=['M','M','T','T','N','N','F','F','F','F'];
+const POS10={A:4,B:0,C:2,D:8,E:6,F:6,G:2,H:4,I:0,T:8,'C-G':2};
+const GRP_M10=new Set(['A','B','C','D','E']);
+const GRP_T10=new Set(['F','G','H','I','T']);
+
+// 4x1x3 — ciclo 8
+const C8_M=['M','M','M','M','N','F','F','F'];
+const C8_T=['T','T','T','T','N','F','F','F'];
+const POS8={O:6,P:2,Q:4,R:0,V:1,X:5,Y:7,Z:3};
+const GRP_M8=new Set(['O','P','Q','R']);
+
+// 4x2-6x4 — ciclo 16: WWWWFFWWWWWWFFFF
+// Posições defasadas de 2 em 2 → 5 trabalhando / 3 folgando por turno todos os dias
+const C16=['W','W','W','W','F','F','W','W','W','W','W','W','F','F','F','F'];
+const POS16={AM:0,BM:2,CM:4,DM:6,EM:8,FM:10,GM:12,HM:14,
+             AT:0,BT:2,CT:4,DT:6,ET:8,FT:10,GT:12,HT:14};
+
+// Semanal
+const CS_M={0:'F',1:'M',2:'M',3:'M',4:'M',5:'M',6:'F'};
+const CS_T={0:'F',1:'T',2:'T',3:'T',4:'T',5:'T',6:'F'};
+
+function getTurno(date,letra,escala){
+  const diff=Math.round((date-TODAY_REF)/86400000);
+  if(escala==='semM') return CS_M[date.getDay()];
+  if(escala==='semT') return CS_T[date.getDay()];
+  if(escala==='4x2x6x4'){
+    const pos=((POS16[letra]+diff)%16+16)%16;
+    return C16[pos]==='W'?(letra.endsWith('T')?'T':'M'):'F';
+  }
+  if(escala==='4x1x3'){const c=GRP_M8.has(letra)?C8_M:C8_T;return c[((POS8[letra]+diff)%8+8)%8];}
+  if(escala==='4x2x4'){
+    const c=GRP_M10.has(letra)?C10_M:GRP_T10.has(letra)?C10_T:C10_CG;
+    return c[((POS10[letra]+diff)%10+10)%10];
+  }
+  return 'F';
+}
+
+function selectCfg(v){
+  selected4=v;
+  document.getElementById('opt-5').className='opt-card'+(v==='5'?'':' inactive');
+  document.getElementById('opt-10').className='opt-card'+(v==='10'?'':' inactive');
+  const mult=CFGS[v].mult;
+  document.getElementById('lbl-q4').textContent='Quantidade (múltiplo de '+mult+')';
+  document.getElementById('q-4x2x4').step=mult;
+  updateCheck();
+}
+
+let weekOffset=0,distribution={},savedConfig={};
+
+function showTab(t){
+  ['visao','equipe','config'].forEach(id=>{
+    document.getElementById('sec-'+id).className='section'+(id===t?' active':'');
+    document.getElementById('tab-'+id).className='tab'+(id===t?' active':'');
+  });
+}
+
+function getVal(id){return parseInt(document.getElementById(id).value)||0;}
+
+function updateCheck(){
+  const total=getVal('total-emp'),q4=getVal('q-4x2x4'),q6=getVal('q-4x2x6x4'),q1=getVal('q-4x1x3'),qSM=getVal('q-semM'),qST=getVal('q-semT');
+  const mult4=CFGS[selected4].mult;
+  const w4=document.getElementById('w-4x2x4');
+  if(q4>0&&q4%mult4!==0){w4.textContent='Deve ser múltiplo de '+mult4;w4.style.display='block';}else{w4.style.display='none';}
+  const warn=(id,mult,val)=>{const el=document.getElementById(id);if(!el)return;el.style.display=(val>0&&val%mult!==0)?'block':'none';el.textContent='Deve ser múltiplo de '+mult;};
+  warn('w-4x2x6x4',16,q6);warn('w-4x1x3',8,q1);
+  const soma=q4+q6+q1+qSM+qST,resto=total-soma;
+  document.getElementById('restante-label').textContent=total>0?'Restante: '+resto:'';
+  const chk=document.getElementById('dist-check');
+  if(!soma){chk.textContent='';return;}
+  if(soma>total&&total>0) chk.innerHTML='<span style="color:#dc2626;">Distribuído ('+soma+') ultrapassa o total ('+total+')</span>';
+  else if(resto>0&&total>0) chk.innerHTML='<span style="color:#d97706;">'+resto+' empregado(s) não alocado(s)</span>';
+  else if(total>0) chk.innerHTML='<span style="color:#16a34a;">Distribuição completa ('+soma+' / '+total+')</span>';
+  else chk.textContent='';
+}
+
+function applyDistribution(){
+  const total=getVal('total-emp'),q4=getVal('q-4x2x4'),q6=getVal('q-4x2x6x4'),q1=getVal('q-4x1x3'),qSM=getVal('q-semM'),qST=getVal('q-semT');
+  const soma=q4+q6+q1+qSM+qST;
+  const mult4=CFGS[selected4].mult;
+  if(total>0&&soma>total){alert('Total distribuído maior que o total de empregados!');return;}
+  if(q4>0&&q4%mult4!==0){alert('4×2×4 deve ser múltiplo de '+mult4);return;}
+  if(q6>0&&q6%16!==0){alert('4×2-6×4 deve ser múltiplo de 16');return;}
+  if(q1>0&&q1%8!==0){alert('4×1×3 deve ser múltiplo de 8');return;}
+  savedConfig={total,q4,q6,q1,qSM,qST,cfg4:selected4};
+  distribution={};
+  if(q4>0){const cfg=CFGS[selected4];const g=q4/cfg.letras.length;distribution['4x2x4']={};cfg.letras.forEach(l=>distribution['4x2x4'][l]=g);}
+  if(q6>0){const g=q6/16;distribution['4x2x6x4']={};['AM','BM','CM','DM','EM','FM','GM','HM','AT','BT','CT','DT','ET','FT','GT','HT'].forEach(l=>distribution['4x2x6x4'][l]=g);}
+  if(q1>0){const g=q1/8;distribution['4x1x3']={};['O','P','Q','R','V','X','Y','Z'].forEach(l=>distribution['4x1x3'][l]=g);}
+  if(qSM>0) distribution['semM']={'SEM-M':qSM};
+  if(qST>0) distribution['semT']={'SEM-T':qST};
+  renderEquipe();renderVisao();
+}
+
+function clearAll(){
+  ['total-emp','q-4x2x4','q-4x2x6x4','q-4x1x3','q-semM','q-semT'].forEach(id=>document.getElementById(id).value='');
+  distribution={};savedConfig={};selectCfg('5');updateCheck();renderEquipe();renderVisao();
+}
+
+function renderEquipe(){
+  const el=document.getElementById('equipe-content');
+  const keys=Object.keys(distribution);
+  if(!keys.length){el.innerHTML='<p style="color:#94a3b8;font-size:13px;text-align:center;padding:2rem 0;">Configure as escalas na aba Configurações</p>';return;}
+  const LABELS={'4x2x4':'4×2×4','4x2x6x4':'4×2-6×4','4x1x3':'4×1×3','semM':'Semanal Manhã','semT':'Semanal Tarde'};
+  const CFG_LABEL={'5':'5 letras — com C-G','10':'10 letras'};
+  let html='';
+  keys.forEach(esc=>{
+    const letras=distribution[esc];
+    const entries=Object.entries(letras).filter(([,v])=>v>0);
+    if(!entries.length) return;
+    const totalEsc=entries.reduce((s,[,v])=>s+v,0);
+    const sublabel=esc==='4x2x4'&&savedConfig.cfg4?' — '+CFG_LABEL[savedConfig.cfg4]:'';
+    html+='<div class="esc-block"><div class="esc-header"><span class="esc-title">'+(LABELS[esc]||esc)+sublabel+'</span><span class="esc-count">'+totalEsc+' pessoas · '+entries.length+' letras</span></div><div class="letter-grid">';
+    entries.forEach(([letra,count])=>{
+      const t=getTurno(new Date(2026,4,4),letra,esc);
+      const tColor=t==='M'?'#d97706':t==='T'?'#ea580c':t==='N'?'#7c3aed':'#16a34a';
+      const tLabel=t==='M'?'Manhã':t==='T'?'Tarde':t==='N'?'Noite':'Folga';
+      html+='<div class="letter-box"><div class="letter-name">'+letra+'</div><div class="letter-count" style="color:'+tColor+'">'+count+'</div><div class="letter-turno">'+tLabel+'</div></div>';
+    });
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+function getMondayOfWeek(offset){
+  const d=new Date(),day=d.getDay();
+  const diff=d.getDate()-day+(day===0?-6:1)+offset*7;
+  const mon=new Date(d);mon.setDate(diff);mon.setHours(0,0,0,0);return mon;
+}
+function changeWeek(d){weekOffset+=d;renderVisao();}
+
+function renderVisao(){
+  const mon=getMondayOfWeek(weekOffset);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  document.getElementById('v-week-label').textContent=mon.getDate()+' '+MESES_PT[mon.getMonth()]+' – '+sun.getDate()+' '+MESES_PT[sun.getMonth()]+' '+sun.getFullYear();
+  const grid=document.getElementById('week-grid');
+  if(!Object.keys(distribution).length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:#94a3b8;font-size:13px;padding:2rem 0;">Configure os funcionários na aba Configurações</div>';
+    ['avg-M','avg-T','avg-N','avg-F'].forEach(id=>document.getElementById(id).textContent='-');
+    return;
+  }
+  const today=new Date();today.setHours(0,0,0,0);
+  let totM=0,totT=0,totN=0,totF=0,html='';
+  for(let i=0;i<7;i++){
+    const date=new Date(mon);date.setDate(mon.getDate()+i);
+    const isToday=date.toDateString()===today.toDateString();
+    const isWeekend=date.getDay()===0||date.getDay()===6;
+    let cM=0,cT=0,cN=0,cF=0;
+    Object.entries(distribution).forEach(([esc,letras])=>{
+      Object.entries(letras).forEach(([letra,count])=>{
+        if(!count) return;
+        const t=getTurno(date,letra,esc);
+        if(t==='M') cM+=count;
+        else if(t==='T') cT+=count;
+        else if(t==='N') cN+=count;
+        else cF+=count;
+      });
+    });
+    totM+=cM;totT+=cT;totN+=cN;totF+=cF;
+    const headCls='day-head'+(isToday?' today':isWeekend?' weekend':'');
+    const div='<div class="divider"></div>';
+    html+='<div class="day-col">'
+      +'<div class="'+headCls+'"><div class="day-dow">'+DIAS_PT[i]+'</div><div class="day-dd">'+date.getDate()+'</div></div>'
+      +'<div class="day-body">'
+        +'<div class="turno-row"><div class="turno-lbl">Manhã</div><div class="turno-val" style="color:#d97706;">'+cM+'</div></div>'
+        +div
+        +'<div class="turno-row"><div class="turno-lbl">Tarde</div><div class="turno-val" style="color:#ea580c;">'+cT+'</div></div>'
+        +div
+        +'<div class="turno-row"><div class="turno-lbl">Noite</div><div class="turno-val" style="color:#7c3aed;">'+cN+'</div></div>'
+        +div
+        +'<div class="turno-row"><div class="turno-lbl">Folga</div><div class="turno-val" style="color:#16a34a;">'+cF+'</div></div>'
+      +'</div>'
+    +'</div>';
+  }
+  grid.innerHTML=html;
+  document.getElementById('avg-M').textContent=Math.round(totM/7);
+  document.getElementById('avg-T').textContent=Math.round(totT/7);
+  document.getElementById('avg-N').textContent=Math.round(totN/7);
+  document.getElementById('avg-F').textContent=Math.round(totF/7);
+}
+
+
+
+selectCfg('5');
+renderVisao();
+</script>
+</body>
+</html>
